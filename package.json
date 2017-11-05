@@ -63,7 +63,7 @@
         "build:esm":    "npm run-script tsc -- -m es6 --outDir ./dist/esm",
         "build:bundle": "npm run-script webpack",
         
-        "release": "npm run-script build && npm publish ./dist",
+        "release": "npm run-script build && npm publish --access public ./dist",
         
         "mkdirp":  "./node_modules/.bin/mkdirp",
         "ncp":     "./node_modules/.bin/ncp",
