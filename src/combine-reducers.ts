@@ -8,7 +8,7 @@
 
 import * as Immutable from 'immutable';
 const cloneDeep = require('lodash.clonedeep');
-import isPlainObject from 'lodash.isplainobject';
+const isPlainObject = require('lodash.isplainobject');
 import { ActionTypes } from 'redux/lib/createStore';
 import warning from 'redux/lib/utils/warning';
 
