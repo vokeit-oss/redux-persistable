@@ -47,13 +47,11 @@
         "webpack":                   "^3.8.1"
     },
     "peerDependencies": {
-        "immutable": "^3.8.2",
-        "redux":     "^3.7.2"
+        "immutable":           "^3.8.2",
+        "localforage":         "^1.5.3",
+        "redux":               "^3.7.2",
+        "remotedev-serialize": "^0.1.0"
     },
-    "files":            [
-        "dist"
-    ],
-    "main":             "dist/index.js",
     "scripts":          {
         "build":        "npm run-script run-s -- build:clean build:copy build:lib build:esm build:bundle",
         "build:clean":  "npm run-script rimraf -- ./dist && npm run-script mkdirp -- ./dist",
