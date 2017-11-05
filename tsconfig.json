@@ -1,0 +1,25 @@
+{
+    "buildOnSave":     false,
+    "compileOnSave":   false,
+    "compilerOptions": {
+        "allowSyntheticDefaultImports":     true,
+        "declaration":                      true,
+        "forceConsistentCasingInFileNames": true,
+        "inlineSourceMap":                  true,
+        "inlineSources":                    true,
+        "lib":                              ["es2015", "dom"],
+        "module":                           "commonjs",
+        "moduleResolution":                 "node",
+        "outDir":                           "./dist/lib",
+        "removeComments":                   true,
+        "rootDir":                          "./src",
+        "suppressImplicitAnyIndexErrors":   true,
+        "target":                           "es5",
+        "typeRoots":                        [
+            "node_modules/@types"
+        ]
+    },
+    "files":           [
+        "./src/index.ts"
+    ]
+}

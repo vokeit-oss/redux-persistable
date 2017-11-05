@@ -1,0 +1,78 @@
+{
+    "name":             "@actra-development-oss/redux-persistable",
+    "description":      "State persistance for redux stores",
+    "keywords":         [
+        "redux",
+        "redux-persistable",
+        "immutable"
+    ],
+    "license":          "MIT",
+    "version":          "0.0.1-alpha.0",
+    "author":           {
+        "name":  "Gabriel Schuster - actra.development",
+        "email": "opensource@actra.de",
+        "url":   "http://www.actra.de/velopment"
+    },
+    "homepage":         "https://github.com/actra-development-oss/redux-persistable#readme",
+    "repository":       {
+        "type": "git",
+        "url":  "git@github.com:actra-development-oss/redux-persistable.git"
+    },
+    "bugs":             {
+        "url":   "https://github.com/actra-development-oss/redux-persistable/issues",
+        "email": "opensource@actra.de"
+    },
+    "publishConfig":    {
+        "registry": "https://registry.npmjs.com/",
+        "access":   "public"
+    },
+    "dependencies":     {
+        "immutable":            "^3.8.2",
+        "localforage":          "^1.5.3",
+        "lodash.clonedeep":     "4.5.0",
+        "lodash.isplainobject": "4.0.6",
+        "redux":                "^3.7.2",
+        "remotedev-serialize":  "^0.1.0"
+    },
+    "devDependencies":  {
+        "@types/lodash.clonedeep":   "^4.5.3",
+        "@types/node":               "^8.0.47",
+        "awesome-typescript-loader": "^3.3.0",
+        "mkdirp":                    "^0.5.1",
+        "ncp":                       "^2.0.0",
+        "npm-run-all":               "^4.1.1",
+        "redux":                     "^3.7.2",
+        "rimraf":                    "^2.6.1",
+        "typescript":                "^2.6.1",
+        "webpack":                   "^3.8.1"
+    },
+    "peerDependencies": {
+        "immutable": "^3.8.2",
+        "redux":     "^3.7.2"
+    },
+    "files":            [
+        "dist"
+    ],
+    "main":             "dist/index.js",
+    "scripts":          {
+        "build":        "npm run-script run-s -- build:clean build:copy build:lib build:esm build:bundle",
+        "build:clean":  "npm run-script rimraf -- ./dist && npm run-script mkdirp -- ./dist",
+        "build:copy":   "npm run-script run-s -- build:copy:1 build:copy:2 build:copy:3",
+        "build:copy:1": "npm run-script ncp -- ./package.dist.json ./dist/package.json",
+        "build:copy:2": "npm run-script ncp -- ./LICENSE ./dist/LICENSE",
+        "build:copy:3": "npm run-script ncp -- ./README.md ./dist/README.md",
+        "build:lib":    "npm run-script tsc",
+        "build:esm":    "npm run-script tsc -- -m es6 --outDir ./dist/esm",
+        "build:bundle": "npm run-script webpack",
+        
+        "release": "npm run-script build && npm publish ./dist",
+        
+        "mkdirp":  "./node_modules/.bin/mkdirp",
+        "ncp":     "./node_modules/.bin/ncp",
+        "rimraf":  "./node_modules/.bin/rimraf",
+        "run-p":   "./node_modules/.bin/run-p",
+        "run-s":   "./node_modules/.bin/run-s",
+        "tsc":     "./node_modules/.bin/tsc",
+        "webpack": "./node_modules/.bin/webpack"
+    }
+}
