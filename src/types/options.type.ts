@@ -10,5 +10,6 @@ import { StorageType } from './storage.type';
 export type OptionsType = {
     merger:     MergerType,
     storage:    StorageType,
-    storageKey: string
+    storageKey: string,
+    version?:   number
 };

@@ -25,6 +25,7 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
     const configuration: OptionsType = <OptionsType>{
         merger:     merger,
         storageKey: 'redux-persistable',
+        version:    0,
         ...options
     };
     
@@ -180,7 +181,8 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                         if(rehydratedSlices[slice]) {
                             configuration.storage.setItem(
                                 configuration.storageKey + '@' + slice,
-                                isIterable(state) ? state.filter((value: any, key: string): boolean => key === slice) : pickBy(state, (value: any, key: string): boolean => key === slice)
+                                isIterable(state) ? state.filter((value: any, key: string): boolean => key === slice) : pickBy(state, (value: any, key: string): boolean => key === slice),
+                                configuration.version
                             );
                         }
                     });

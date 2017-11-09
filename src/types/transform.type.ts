@@ -4,6 +4,6 @@
 
 
 export type TransformType = {
-    out: (state: any, key: string) => any,
-    in:  (state: any, key: string) => any
+    transformDataToStorage:   (state: any, key: string) => any,
+    transformDataFromStorage: (state: any, key: string) => any
 };

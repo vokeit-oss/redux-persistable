@@ -7,6 +7,7 @@ import { AbstractStorage } from './abstract-storage';
 import { SimpleSerializer } from '../serializers/index';
 import {
     MergerType,
+    MigrationType,
     SerializerType,
     StorageType,
     TransformType
@@ -18,8 +19,8 @@ export class AbstractBrowserStorage extends AbstractStorage {
     protected serializer: SerializerType;
     
     
-    constructor(storageType: 'local' | 'session', serializer?: SerializerType, transforms?: TransformType[]) {
-        super(AbstractBrowserStorage.getStorage(<'localStorage' | 'sessionStorage'>(storageType + 'Storage')), serializer, transforms);
+    constructor(storageType: 'local' | 'session', serializer?: SerializerType, transforms?: TransformType[], migrations?: MigrationType[]) {
+        super(AbstractBrowserStorage.getStorage(<'localStorage' | 'sessionStorage'>(storageType + 'Storage')), serializer, transforms, migrations);
     }
     
     
