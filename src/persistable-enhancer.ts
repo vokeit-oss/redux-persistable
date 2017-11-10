@@ -142,10 +142,10 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
             const dispatch: (action: Action) => any = store.dispatch;
             store.dispatch                          = (action: Action): any => {
                 const actionType: string  = action.hasOwnProperty('type') ? action.type : undefined;
-                const actionSlice: string = action.hasOwnProperty('slice') && 'string' === typeof action['slice'] && action['slice'].length ? action['slice'] : null;
+                const actionSlice: string = action.hasOwnProperty('slice') && 'string' === typeof action['slice'] && 0 < action['slice'].length ? action['slice'] : null;
                 
                 // Create an action buffer if not done yet
-                if(null !== actionSlice && !actionBuffers.hasOwnProperty(actionSlice) || !Array.isArray(actionBuffers[actionSlice])) {
+                if(null !== actionSlice && (!actionBuffers.hasOwnProperty(actionSlice) || !Array.isArray(actionBuffers[actionSlice]))) {
                     actionBuffers[actionSlice] = [];
                 }
                 
@@ -155,30 +155,15 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                     actionBuffers[actionSlice].push(action);
                 }
                 
-                // Check if there's a rehydration going on and buffer actions until it's finished
-                if(0 < filter(rehydratedSlices, (rehydrated: boolean, slice: string) => !rehydrated).length) {
-                    // Whenever a rehydration occurs, dispatch it
-                    if(constants.REHYDRATE_SLICE_ACTION === actionType) {
-                        return dispatch(action);
-                    }
-                    // Whenever a rehydration finished, dispatch it
-                    else if(constants.REHYDRATED_SLICE_ACTION === actionType) {
-                        dispatch(action);
-                        
-                        // ...and flush the action buffer as soon as the last rehydration finished
-                        if(0 === filter(rehydratedSlices, (rehydrated: boolean, slice: string) => !rehydrated).length) {
-                            actionBuffers[actionSlice] = actionBuffers[actionSlice].filter((bufferedAction: Action): boolean => {
-                                dispatch(bufferedAction);
-                                
-                                return false;
-                            });
-                        }
-                        
-                        return;
-                    }
+                // Whenever a rehydration finished, dispatch it and flush the action buffer
+                if(constants.REHYDRATED_SLICE_ACTION === actionType) {
+                    dispatch(action);
                     
-                    // ...otherwise buffer the action
-                    actionBuffers[actionSlice].push(action);
+                    actionBuffers[actionSlice] = actionBuffers[actionSlice].filter((bufferedAction: Action): boolean => {
+                        dispatch(bufferedAction);
+                        
+                        return false;
+                    });
                     
                     return;
                 }

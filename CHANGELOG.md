@@ -1,3 +1,7 @@
+### v0.1.0-beta.5
+
+- Fixed flushing ActionBuffer
+
 ### v0.1.0-beta.4
 
 - Actions with a "slice" property now always get buffered until their slice has been rehydrated, this should solve usual timing isues
