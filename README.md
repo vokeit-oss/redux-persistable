@@ -16,14 +16,19 @@ State persistance for redux stores supporting immutable.js, lazy reducers, versi
 - Versioned states, versions are persisted with the state slices but not published to the state upon loading to not clutter it with internals
 - Migrations from old state versions to latest by specifying migration functions
   - Migrations are processed in serial order so there's no need to bloat them with steps for all possible previous versions
-  - Example: Input version: 2, migration versions: 2, 3, 4, 5, redux-persistable will pass input to migration "3", the result of this to "4" and that to "5" 
+    - Input version: 2
+    - Migration versions: 2, 3, 4, 5
+    - redux-persistable will pass the de-serialized data to migration "3", the result of this to "4" and that to "5"
   - Migration functions can process multiple version steps at once, they have to return the version the migrated state is in
-  - Example: Input version: 2, migration versions: 2, 5, 10, redux-persistable will pass input to migration "5" which handles migrations from 2 to 5 and will pass the result to "10" which handles migration from 5 to 10
+    - Input version: 2
+    - Migration versions: 2, 5, 10
+    - redux-persistable will pass input to migration "5" which handles migrations from 2 to 5 and will pass the result to "10" which handles migration from 5 to 10
 - Multiple storages available: LocalForage, native LocalStorage, native SessionStorage, MergedStorage
+  - Custom storages can be implemented, see AbstractStorage for e.g. version handling
   - MergedStorage: store slices of the state to different storages (e.g. LocalStorage and SessionStorage) and automatically merge them upon loading
-  - Filtering for MergedStorage is done by transforms, e.g. by using createFilter of [@actra-development-oss/redux-persist-transform-filter-immutable](https://github.com/actra-development-oss/redux-persist-transform-filter-immutable)
-  - Custom mergers possible, ships with plain object merging (spread operator) and immutable merger (mergeDeep)
-  - Custom serializers possible, ships with simple serializer (JSON.stringify / JSON.parse) and immutable serializer ( [remotdev-serialize}(https://github.com/zalmoxisus/remotedev-serialize) / [jsan](https://github.com/kolodny/jsan) )
+    - Filtering for MergedStorage is done by transforms, e.g. by using createFilter of [@actra-development-oss/redux-persist-transform-filter-immutable](https://github.com/actra-development-oss/redux-persist-transform-filter-immutable)
+    - Custom mergers possible, ships with plain object merging (spread operator) and immutable merger (mergeDeep)
+  - Custom serializers possible, ships with simple serializer (JSON.stringify / JSON.parse) and immutable serializer ([remotdev-serialize](https://github.com/zalmoxisus/remotedev-serialize) / [jsan](https://github.com/kolodny/jsan))
 
 
 ## Usage
@@ -134,7 +139,7 @@ const store = createStore(
 ```
 
 
-## Thanks
+## Thanks to...
 
-Thanks to Zack Story for [redux-persist](https://github.com/rt2zz/redux-persist) that I used previously and that inspired me to build my own solution when immutable.js got effectivly unusable with v5
-Thanks to zalmoxisus for [remotedev-serialize](https://github.com/zalmoxisus/remotedev-serialize), a great serializer for immutables, and [jsan](https://github.com/zalmoxisus/jsan), a great general-purpose JSON serializer
+- Zack Story for [redux-persist](https://github.com/rt2zz/redux-persist) that I used previously and that inspired me to build my own solution when immutable.js got effectivly unusable with v5
+- zalmoxisus for [remotedev-serialize](https://github.com/zalmoxisus/remotedev-serialize), a great serializer for immutables, and [jsan](https://github.com/zalmoxisus/jsan), a great general-purpose JSON serializer
