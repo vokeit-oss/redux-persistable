@@ -6,6 +6,7 @@
 const cloneDeep = require('lodash.clonedeep');
 import {
     MergerType,
+    MigrationType,
     SerializerType,
     StorageType,
     TransformType
@@ -127,6 +128,13 @@ export class MergedStorage {
     
     
     /**
+     * Set migrations / ignored for MergedStorage
+     */
+    public setMigrations(migrations?: MigrationType[]): void {
+    }
+    
+    
+    /**
      * Get an item from combined storages
      */
     public getItem(key: string): Promise<any> {
@@ -155,12 +163,12 @@ export class MergedStorage {
     /**
      * Set an item on combined storages
      */
-    public setItem(key: string, state: any): Promise<void> {
+    public setItem(key: string, state: any, version?: number): Promise<void> {
         return new Promise<any>((resolve: (...args: any[]) => void, reject: (...args: any[]) => void) => {
             const promises: Promise<void>[] = [];
             
             Object.keys(this.storages).forEach((id: string) => {
-                promises.push(this.storages[id].setItem(key, state));
+                promises.push(this.storages[id].setItem(key, state, version));
             });
             
             Promise.all(promises).then(resolve);
