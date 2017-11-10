@@ -39,7 +39,7 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
     const getShapeAction: string                     = '@@redux-persistable/GET_SHAPE_' + Math.random().toString(36).substring(7).split('').join('.');
     const rehydratedSlices: {[key: string]: boolean} = {};
     const dispatchedSlices: string[]                 = [];
-    const actionBuffer: any[]                        = [];
+    const actionBuffers: {[key: string]: any[]}      = {};
     
     return (nextCreateStore: StoreCreator): StoreEnhancerStoreCreator<any> => {
         return (reducer: Reducer<any>, initialState: any, enhancer?: StoreEnhancer<any>): Store<any> => {
@@ -139,22 +139,38 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
             store.replaceReducer(reducer);
             
             // Hook into dispatch to buffer actions until rehydrated
-            const dispatch: (...args: any[]) => any = store.dispatch;
-            store.dispatch                          = (...args: any[]): any => {
+            const dispatch: (action: Action) => any = store.dispatch;
+            store.dispatch                          = (action: Action): any => {
+                const actionType: string  = action.hasOwnProperty('type') ? action.type : undefined;
+                const actionSlice: string = action.hasOwnProperty('slice') && 'string' === typeof action['slice'] && action['slice'].length ? action['slice'] : null;
+                
+                // Create an action buffer if not done yet
+                if(null !== actionSlice && !actionBuffers.hasOwnProperty(actionSlice) || !Array.isArray(actionBuffers[actionSlice])) {
+                    actionBuffers[actionSlice] = [];
+                }
+                
+                // Buffer actions for slices that have not yet been rehydrated, skipping those that don't have a "slice" property
+                if(constants.REHYDRATE_SLICE_ACTION !== actionType && constants.REHYDRATED_SLICE_ACTION !== actionType &&
+                  null !== actionSlice && (!rehydratedSlices.hasOwnProperty(actionSlice) || !rehydratedSlices[actionSlice])) {
+                    actionBuffers[actionSlice].push(action);
+                }
+                
                 // Check if there's a rehydration going on and buffer actions until it's finished
                 if(0 < filter(rehydratedSlices, (rehydrated: boolean, slice: string) => !rehydrated).length) {
                     // Whenever a rehydration occurs, dispatch it
-                    if('object' === typeof args[0] && (<Object>args[0]).hasOwnProperty('type') && constants.REHYDRATE_SLICE_ACTION === args[0].type) {
-                        return dispatch(...args);
+                    if(constants.REHYDRATE_SLICE_ACTION === actionType) {
+                        return dispatch(action);
                     }
                     // Whenever a rehydration finished, dispatch it
-                    else if('object' === typeof args[0] && (<Object>args[0]).hasOwnProperty('type') && constants.REHYDRATED_SLICE_ACTION === args[0].type) {
-                        dispatch(...args);
+                    else if(constants.REHYDRATED_SLICE_ACTION === actionType) {
+                        dispatch(action);
                         
                         // ...and flush the action buffer as soon as the last rehydration finished
                         if(0 === filter(rehydratedSlices, (rehydrated: boolean, slice: string) => !rehydrated).length) {
-                            actionBuffer.forEach((params: any[]) => {
-                                dispatch(...params);
+                            actionBuffers[actionSlice] = actionBuffers[actionSlice].filter((bufferedAction: Action): boolean => {
+                                dispatch(bufferedAction);
+                                
+                                return false;
                             });
                         }
                         
@@ -162,14 +178,14 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                     }
                     
                     // ...otherwise buffer the action
-                    actionBuffer.push(args);
+                    actionBuffers[actionSlice].push(action);
                     
                     return;
                 }
                 
-                // No current rehydration, passthrough to original dispatch
+                // No current rehydration and no action on a not-yet rehydrated slice - passthrough to original dispatch
                 
-                return dispatch(...args);
+                return dispatch(action);
             };
             
             // Subscribe to store to persist state changes for all slices that have been rehydrated
