@@ -7,23 +7,23 @@ State persistance for redux stores supporting immutable.js, lazy reducers, versi
 
 - Supports immutable.js for the whole state
 - Supports lazily added reducers by storing the slices of state in separate storage keys
-..- Hooks into redux' replaceReducer() to catch up with new reducer map
-..- Dispatches rehydrate actions for every slice for reducers to implement custom rehydration logic
-..- Dispatches rehydrated actions for every slice to inform the app that a new slice has been loaded and rehydrated
+  - Hooks into redux' replaceReducer() to catch up with new reducer map
+  - Dispatches rehydrate actions for every slice for reducers to implement custom rehydration logic
+  - Dispatches rehydrated actions for every slice to inform the app that a new slice has been loaded and rehydrated
 - ActionBuffer while rehydrating
-..- Hooks into redux' dispatch() to buffer dispatched actions while rehydration is in progress
-..- Flushes action buffer in FIFO order after rehydration finished
+  - Hooks into redux' dispatch() to buffer dispatched actions while rehydration is in progress
+  - Flushes action buffer in FIFO order after rehydration finished
 - Versioned states, versions are persisted with the state slices but not published to the state upon loading to not clutter it with internals
 - Migrations from old state versions to latest by specifying migration functions
-..- Migrations are processed in serial order so there's no need to bloat them with steps for all possible previous versions
-..- Example: Input version: 2, migration versions: 2, 3, 4, 5, redux-persistable will pass input to migration "3", the result of this to "4" and that to "5" 
-..- Migration functions can process multiple version steps at once, they have to return the version the migrated state is in
-..- Example: Input version: 2, migration versions: 2, 5, 10, redux-persistable will pass input to migration "5" which handles migrations from 2 to 5 and will pass the result to "10" which handles migration from 5 to 10
+  - Migrations are processed in serial order so there's no need to bloat them with steps for all possible previous versions
+  - Example: Input version: 2, migration versions: 2, 3, 4, 5, redux-persistable will pass input to migration "3", the result of this to "4" and that to "5" 
+  - Migration functions can process multiple version steps at once, they have to return the version the migrated state is in
+  - Example: Input version: 2, migration versions: 2, 5, 10, redux-persistable will pass input to migration "5" which handles migrations from 2 to 5 and will pass the result to "10" which handles migration from 5 to 10
 - Multiple storages available: LocalForage, native LocalStorage, native SessionStorage, MergedStorage
-..- MergedStorage: store slices of the state to different storages (e.g. LocalStorage and SessionStorage) and automatically merge them upon loading
-..- Filtering for MergedStorage is done by transforms, e.g. by using createFilter of [@actra-development-oss/redux-persist-transform-filter-immutable](https://github.com/actra-development-oss/redux-persist-transform-filter-immutable)
-..- Custom mergers possible, ships with plain object merging (spread operator) and immutable merger (mergeDeep)
-..- Custom serializers possible, ships with simple serializer (JSON.stringify / JSON.parse) and immutable serializer ( [remotdev-serialize}(https://github.com/zalmoxisus/remotedev-serialize) / [jsan](https://github.com/kolodny/jsan) )
+  - MergedStorage: store slices of the state to different storages (e.g. LocalStorage and SessionStorage) and automatically merge them upon loading
+  - Filtering for MergedStorage is done by transforms, e.g. by using createFilter of [@actra-development-oss/redux-persist-transform-filter-immutable](https://github.com/actra-development-oss/redux-persist-transform-filter-immutable)
+  - Custom mergers possible, ships with plain object merging (spread operator) and immutable merger (mergeDeep)
+  - Custom serializers possible, ships with simple serializer (JSON.stringify / JSON.parse) and immutable serializer ( [remotdev-serialize}(https://github.com/zalmoxisus/remotedev-serialize) / [jsan](https://github.com/kolodny/jsan) )
 
 
 ## Usage
