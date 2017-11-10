@@ -147,6 +147,8 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                 // Create an action buffer if not done yet
                 if(null !== actionSlice && (!actionBuffers.hasOwnProperty(actionSlice) || !Array.isArray(actionBuffers[actionSlice]))) {
                     actionBuffers[actionSlice] = [];
+                    
+                    return;
                 }
                 
                 // Buffer actions for slices that have not yet been rehydrated, skipping those that don't have a "slice" property
