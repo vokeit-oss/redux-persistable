@@ -10,5 +10,5 @@ export default function immutableMerger(
                             initialState: Immutable.List<any> | Immutable.Map<any, any> | Immutable.OrderedMap<any, any>,
                             persistedState: Immutable.List<any> | Immutable.Map<any, any> | Immutable.OrderedMap<any, any>
                         ): Immutable.List<any> | Immutable.Map<any, any> | Immutable.OrderedMap<any, any> {
-    return persistedState ? (<any>initialState).mergeDeep(persistedState) : initialState;
+    return persistedState && initialState ? (<any>initialState).mergeDeep(persistedState) : initialState;
 };
