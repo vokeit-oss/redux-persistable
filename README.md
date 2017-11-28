@@ -105,11 +105,13 @@ import {
     immutableMerger,
     LocalstorageStorage,
     MergedStorage,
+    MergerType,
     SessionstorageStorage
 } from '@actra-development-oss/redux-persistable/lib';
 // ...other imports, see usage section
 
-const mergedStorage                        = new MergedStorage(Map(), immutableMerger);
+const merger: MergerType                   = immutableMerger;
+const mergedStorage                        = new MergedStorage(Map(), merger);
 const permanentTransforms: TransformType[] = [
     createFilter('myReducerOne', ['myInfoOne'], ['myInfoOne'], 'whitelist'),
     createFilter('myReducerTwo', ['myInfoThree'], ['myInfoThree'], 'whitelist'),
@@ -124,7 +126,7 @@ mergedStorage.addStorage('my-permanent-storage', new LocalstorageStorage(seriali
 mergedStorage.addStorage('my-temporary-storage', new SessionstorageStorage(serializer, temporaryTransforms));
 
 const store = createStore(
-    Object.keys(this.reducers).length ? combineReducers(reducers, Map()) : (state: any, action: Action) => state,
+    Object.keys(reducers).length ? combineReducers(reducers, Map()) : (state: any, action: Action) => state,
     initialState,
     compose(
         persistableEnhancer({
