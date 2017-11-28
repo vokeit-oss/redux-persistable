@@ -7,7 +7,7 @@
         "immutable"
     ],
     "license":          "MIT",
-    "version":          "0.1.0-beta.8",
+    "version":          "1.0.0",
     "author":           {
         "name":  "Gabriel Schuster - actra.development",
         "email": "opensource@actra.de",
@@ -39,14 +39,14 @@
     },
     "devDependencies":  {
         "@types/lodash.clonedeep":   "^4.5.3",
-        "@types/node":               "^8.0.47",
-        "awesome-typescript-loader": "^3.3.0",
+        "@types/node":               "^8.0.53",
+        "awesome-typescript-loader": "^3.4.0",
         "mkdirp":                    "^0.5.1",
         "ncp":                       "^2.0.0",
-        "npm-run-all":               "^4.1.1",
+        "npm-run-all":               "^4.1.2",
         "redux":                     "^3.7.2",
         "rimraf":                    "^2.6.1",
-        "typescript":                "^2.6.1",
+        "typescript":                "^2.6.2",
         "webpack":                   "^3.8.1"
     },
     "peerDependencies": {
@@ -58,10 +58,11 @@
     "scripts":          {
         "build":        "npm run-script run-s -- build:clean build:copy build:lib build:esm build:bundle",
         "build:clean":  "npm run-script rimraf -- ./dist && npm run-script mkdirp -- ./dist",
-        "build:copy":   "npm run-script run-s -- build:copy:1 build:copy:2 build:copy:3",
-        "build:copy:1": "npm run-script ncp -- ./package.dist.json ./dist/package.json",
-        "build:copy:2": "npm run-script ncp -- ./LICENSE ./dist/LICENSE",
-        "build:copy:3": "npm run-script ncp -- ./README.md ./dist/README.md",
+        "build:copy":   "npm run-script run-s -- build:copy:1 build:copy:2 build:copy:3 build:copy:4",
+        "build:copy:1": "npm run-script ncp -- ./src ./dist/src",
+        "build:copy:2": "npm run-script ncp -- ./package.dist.json ./dist/package.json",
+        "build:copy:3": "npm run-script ncp -- ./LICENSE ./dist/LICENSE",
+        "build:copy:4": "npm run-script ncp -- ./README.md ./dist/README.md",
         "build:lib":    "npm run-script tsc",
         "build:esm":    "npm run-script tsc -- -m es6 --outDir ./dist/esm",
         "build:bundle": "npm run-script webpack",

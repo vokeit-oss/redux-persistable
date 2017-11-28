@@ -37,7 +37,7 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
     }
     
     const getShapeAction: string                                                                = '@@redux-persistable/GET_SHAPE_' + Math.random().toString(36).substring(7).split('').join('.');
-    const rehydratedSlices: {[key: string]: {status: 'added' | 'pending' | 'done', value: any}} = {};
+    const rehydratedSlices: {[key: string]: {status: 'added' | 'pending' | 'processing' | 'done', value: any}} = {};
     const actionBuffers: {[key: string]: any[]}                                                 = {};
     
     return (nextCreateStore: StoreCreator): StoreEnhancerStoreCreator<any> => {
@@ -47,22 +47,41 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                 initialState = undefined;
             }
             
-            const rehydrateSlices: (currentStore: Store<any>) => void = (currentStore: Store<any>): void => {
+            const rehydrateSlices: (currentStore: Store<any>, newReducer: Reducer<any>) => void = (currentStore: Store<any>, newReducer: Reducer<any>): void => {
                 try {
                     Object.keys(rehydratedSlices)
                         .filter((slice: string): boolean => 'added' === rehydratedSlices[slice].status)
                         .forEach((slice: string): void => {
                             rehydratedSlices[slice].status = 'pending';
                             
+                            // Load from storage
                             configuration.storage.getItem(configuration.storageKey + '@' + slice).then((persistedState: any) => {
                                 const currentState: any    = currentStore.getState();
                                 const isImmutable: boolean = isIterable(currentState);
-                                const rehydratedState: any = configuration.merger(
+                                const loadedState: any     = configuration.merger(
                                     isImmutable ? currentState.get(slice) : currentState[slice],
                                     isImmutable ? persistedState.get(slice) : persistedState[slice]
                                 );
                                 
-                                setTimeout(() => currentStore.dispatch(<Action>{type: constants.REHYDRATE_SLICE_ACTION, slice: slice, payload: rehydratedState}), 0);
+                                // Pass the loaded state through the original reducer so custom reducers may handle rehydration themselves
+                                const rehydratedState: any = newReducer(undefined, <Action>{type: constants.REHYDRATE_SLICE_ACTION, slice: slice, payload: loadedState});
+                                const initialSlice: any    = isImmutable ? currentState.get(slice) : currentState[slice];
+                                let rehydratedSlice: any   = isImmutable ? rehydratedState.get(slice) : rehydratedState[slice];
+                                
+                                // If initial state matches the rehydrated state returned from the reducer (no custom rehydration applied) use the state loaded from storage 
+                                if(isMatch(isIterable(initialSlice) ? initialSlice.toJS() : initialSlice, isIterable(rehydratedSlice) ? rehydratedSlice.toJS() : rehydratedSlice)) {
+                                    rehydratedSlice = loadedState;
+                                }
+                                
+                                rehydratedSlices[slice].value  = isImmutable ? rehydratedSlice : rehydratedSlice;
+                                rehydratedSlices[slice].status = 'processing';
+                                
+                                // Dispatch an action that the slice has been rehydrated
+                                store.dispatch(<Action>{
+                                    type:    constants.REHYDRATED_SLICE_ACTION,
+                                    slice:   slice,
+                                    payload: rehydratedSlice
+                                });
                             });
                     });
                 }
@@ -75,47 +94,54 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
             const store: Store<any> = nextCreateStore(reducer, initialState, enhancer);
             
             // Hook into dispatch to buffer actions until rehydrated
-            const dispatch: (action: Action) => any = store.dispatch;
-            store.dispatch                          = (action: Action): any => {
+            const originalDispatch: (action: Action) => any = store.dispatch;
+            store.dispatch                                  = (action: Action): any => {
                 const actionType: string  = 'type' in action ? action.type : undefined;
                 const actionSlice: string = 'slice' in action && 'string' === typeof action['slice'] && 0 < action['slice'].length ? action['slice'] : null;
                 
-                // Create an action buffer if not done yet
-                if(null !== actionSlice && (!(actionSlice in actionBuffers) || !Array.isArray(actionBuffers[actionSlice]))) {
+                // No slice, no to-rehydrate-slice or already rehydrated - no need to process
+                if(null === actionSlice || !(actionSlice in rehydratedSlices) || ((actionSlice in rehydratedSlices) && 'done' === rehydratedSlices[actionSlice].status)) {
+                    return originalDispatch(action);
+                }
+                
+                // Create an action buffer for the slice if not done yet
+                if((!(actionSlice in actionBuffers) || !Array.isArray(actionBuffers[actionSlice]))) {
                     actionBuffers[actionSlice] = [];
                 }
                 
-                // Buffer actions for slices that have not yet been rehydrated, skipping those that don't have a "slice" property
-                if(constants.REHYDRATE_SLICE_ACTION !== actionType && constants.REHYDRATED_SLICE_ACTION !== actionType &&
-                  null !== actionSlice && (!(actionSlice in rehydratedSlices) || 'done' !== rehydratedSlices[actionSlice].status)) {
+                // Buffer actions for slices that have not yet been rehydrated
+                if(constants.REHYDRATE_SLICE_ACTION !== actionType && constants.REHYDRATED_SLICE_ACTION !== actionType) {
                     actionBuffers[actionSlice].push(action);
                     
                     return;
                 }
                 
                 // Whenever a rehydration finished, dispatch it and flush the action buffer
-                if(constants.REHYDRATED_SLICE_ACTION === actionType) {
-                    dispatch(action);
+                if(constants.REHYDRATED_SLICE_ACTION === actionType && 'processing' === rehydratedSlices[actionSlice].status) {
+                    originalDispatch(action);
                     
                     actionBuffers[actionSlice] = actionBuffers[actionSlice].filter((bufferedAction: Action): boolean => {
-                        dispatch(bufferedAction);
+                        originalDispatch(bufferedAction);
                         
                         return false;
                     });
+                    
+                    // Set the status to "done" so buffering is disabled from now on
+                    rehydratedSlices[actionSlice].status = 'done';
                     
                     return;
                 }
                 
                 // No current rehydration and no action on a not-yet rehydrated slice - passthrough to original dispatch
                 
-                return dispatch(action);
+                return originalDispatch(action);
             };
             
             // Wrap reducer to catch rehydrate action
-            const originalReplaceReducer: (setReducer: Reducer<any>) => void = store.replaceReducer;
-            store.replaceReducer                                             = (setReducer: Reducer<any>): void => {
+            const originalReplaceReducer: (newReducer: Reducer<any>) => void = store.replaceReducer;
+            store.replaceReducer                                             = (newReducer: Reducer<any>): void => {
                 // Get the shape of the state to know which rehydrations have to be executed
-                const currentState: any = setReducer(undefined, <Action>{type: getShapeAction});
+                const currentState: any = newReducer(undefined, <Action>{type: getShapeAction});
                 
                 if(isIterable(currentState)) {
                     currentState.forEach((value: any, key: string): void => {
@@ -128,52 +154,20 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                     });
                 }
                 
-                const originalReducer: Reducer<any> = setReducer;
-                setReducer                          = (state: any, action: Action): any => {
-                    if(constants.REHYDRATE_SLICE_ACTION === action.type) {
-                        if((action['slice'] in rehydratedSlices) && 'pending' === rehydratedSlices[action['slice']].status) {
-                            rehydratedSlices[action['slice']].status = 'done';
-                            
-                            // Pass the rehydrated state through the original reducer so custom reducers may handle rehydration themselves
-                            const initialState: any    = originalReducer(undefined, <Action>{type: getShapeAction});
-                            const rehydratedState: any = originalReducer(undefined, action);
-                            const initialSlice: any    = isIterable(initialState) ? initialState.get(action['slice']) : initialState[action['slice']];
-                            let rehydratedSlice: any   = isIterable(initialState) ? rehydratedState.get(action['slice']) : rehydratedState[action['slice']];
-                            
-                            // If initial state matches the rehydrated state returned from the reducer (no custom rehydration applied) use the state loaded from storage 
-                            if(isMatch(isIterable(initialSlice) ? initialSlice.toJS() : initialSlice, isIterable(rehydratedSlice) ? rehydratedSlice.toJS() : rehydratedSlice)) {
-                                rehydratedSlice = action['payload'];
-                            }
-                            
-                            // Dispatch an action that the slice has been rehydrated, delayed a bit so dispatch won't complain about a reducer dispatching an action
-                            setTimeout(() => store.dispatch(<Action>{
-                                type:    constants.REHYDRATED_SLICE_ACTION,
-                                slice:   action['slice'],
-                                payload: rehydratedSlice
-                            }), 0);
-                            
-                            rehydratedSlices[action['slice']].value = isIterable(state) ? state.set(action['slice'], rehydratedSlice) : {...state, [action['slice']]: rehydratedSlice};
-                            
-                            return rehydratedSlices[action['slice']].value;
-                        }
-                        else if((action['slice'] in rehydratedSlices) && 'done' === rehydratedSlices[action['slice']].status) {
-                            rehydratedSlices[action['slice']].value = isIterable(state) ? state.set(action['slice'], action['payload']) : {...state, [action['slice']]: action['payload']};
-                            
-                            return rehydratedSlices[action['slice']].value;
-                        }
-                        
-                        // Ignore rehydration actions for non-existant or slices that are neither pending nor done
-                        return state;
+                const originalReducer: Reducer<any> = newReducer;
+                newReducer                          = (state: any, action: Action): any => {
+                    if(constants.REHYDRATED_SLICE_ACTION === action.type && ('slice' in action) && (action['slice'] in rehydratedSlices) && 'processing' === rehydratedSlices[action['slice']].status) {
+                        return originalReducer(isIterable(state) ? state.set(action['slice'], action['payload']) : {...state, [action['slice']]: action['payload']}, action);
                     }
                     
                     return originalReducer(state, action);
                 };
                 
-                originalReplaceReducer(setReducer);
+                originalReplaceReducer(newReducer);
                 
                 // Execute rehydrations
-                if(0 < filter(rehydratedSlices, (rehydrated: {status: 'added' | 'pending' | 'done', value: any}, slice: string) => 'added' === rehydrated.status).length) {
-                    setTimeout((): void => rehydrateSlices(store), 0);
+                if(0 < filter(rehydratedSlices, (rehydrated: {status: 'added' | 'pending' | 'processing' | 'done', value: any}, slice: string) => 'added' === rehydrated.status).length) {
+                    setTimeout((): void => rehydrateSlices(store, newReducer), 0);
                 }
             };
             
@@ -196,7 +190,7 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                     });
                 }
                 catch(error) {
-                    console.warn('Unable to persist state to storage:', error);
+                    console.warn('Failed to persist state to storage:', error);
                 }
             });
             

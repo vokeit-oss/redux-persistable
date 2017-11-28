@@ -73,7 +73,7 @@ export class AbstractBrowserStorage extends AbstractStorage {
         }
         else {
             if(process.env.NODE_ENV !== 'production') {
-                console.error(`redux-persist failed to create sync storage. falling back to memory storage.`);
+                console.error('redux-persistable failed to create storage, falling back to memory storage.');
             }
             
             return <StorageType>{
