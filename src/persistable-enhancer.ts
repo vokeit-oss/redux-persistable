@@ -77,7 +77,7 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                                 rehydratedSlices[slice].status = 'processing';
                                 
                                 // Dispatch an action that the slice has been rehydrated
-                                store.dispatch(<Action>{
+                                currentStore.dispatch(<Action>{
                                     type:    constants.REHYDRATED_SLICE_ACTION,
                                     slice:   slice,
                                     payload: rehydratedSlice
