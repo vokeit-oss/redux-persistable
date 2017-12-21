@@ -73,7 +73,7 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                                     rehydratedSlice = loadedState;
                                 }
                                 
-                                rehydratedSlices[slice].value  = isImmutable ? rehydratedSlice : rehydratedSlice;
+                                rehydratedSlices[slice].value  = isImmutable ? rehydratedSlice.toJS() : rehydratedSlice;
                                 rehydratedSlices[slice].status = 'processing';
                                 
                                 // Dispatch an action that the slice has been rehydrated
@@ -156,6 +156,9 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                 
                 const originalReducer: Reducer<any> = newReducer;
                 newReducer                          = (state: any, action: Action): any => {
+                    // Fetch latest state as the one passed in could already be outdated
+                    state = store.getState();
+                    
                     if(constants.REHYDRATED_SLICE_ACTION === action.type && ('slice' in action) && (action['slice'] in rehydratedSlices) && 'processing' === rehydratedSlices[action['slice']].status) {
                         return originalReducer(isIterable(state) ? state.set(action['slice'], action['payload']) : {...state, [action['slice']]: action['payload']}, action);
                     }
@@ -176,7 +179,7 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
             
             // Subscribe to store to persist state changes for all slices that have been rehydrated
             store.subscribe(() => {
-                const state = store.getState();
+                const state: any = store.getState();
                 
                 try {
                     Object.keys(rehydratedSlices).forEach((slice: string): void => {
