@@ -158,9 +158,9 @@ export function persistableEnhancer(options: OptionsType): StoreEnhancer<any> {
                         rehydratedSlices[key] = !(key in rehydratedSlices) ? {status: 'added', value: null} : rehydratedSlices[key];
                     });
                 }
-                
+
                 const originalReducer: Reducer<any> = newReducer;
-                newReducer                          = (state: any, action: Action): any => {
+                const finalReducer                  = (state: any, action: Action): any => {
                     // Fetch latest state as the one passed in could already be outdated
                     state = store.getState();
                     
@@ -171,11 +171,11 @@ export function persistableEnhancer(options: OptionsType): StoreEnhancer<any> {
                     return originalReducer(state, action);
                 };
                 
-                originalReplaceReducer(newReducer);
+                originalReplaceReducer(finalReducer);
                 
                 // Execute rehydrations
                 if(0 < filter(rehydratedSlices, (rehydrated: {status: 'added' | 'pending' | 'processing' | 'done', value: any}, slice: string) => 'added' === rehydrated.status).length) {
-                    setTimeout((): void => rehydrateSlices(store, newReducer), 0);
+                    setTimeout((): void => rehydrateSlices(store, finalReducer), 0);
                 }
             };
             
