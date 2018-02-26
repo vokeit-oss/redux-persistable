@@ -1,21 +1,30 @@
 /**
- * Copyright (c) 2015-present Dan Abramov
- * Copyright (c) 2017-present Gabriel Schuster
+ * Copyright (c) 2015 - present Dan Abramov
+ * Copyright (c) 2017 - present Gabriel Schuster
  * 
  * @author Gabriel Schuster <opensource@actra.de>
  */
 
 
-import * as Immutable from 'immutable';
+import {
+    isImmutable,
+    Map,
+    OrderedMap
+} from 'immutable';
 const cloneDeep = require('lodash.clonedeep');
 const isPlainObject = require('lodash.isplainobject');
+import{ Action } from 'redux';
 import { ActionTypes } from 'redux/lib/createStore';
 import warning from 'redux/lib/utils/warning';
+import {
+    ReducerType,
+    StateType
+} from './types/index';
 
 
-function getUndefinedStateErrorMessage(key, action) {
-    const actionType        = action && action.type;
-    const actionDescription = (actionType && `action "${String(actionType)}"`) || 'an action';
+function getUndefinedStateErrorMessage(key: string, action: Action): string {
+    const actionType: string        = action && action.type;
+    const actionDescription: string = (actionType && `action "${String(actionType)}"`) || 'an action';
     
     return (
         `Given ${actionDescription}, reducer "${key}" returned undefined. ` +
@@ -25,15 +34,15 @@ function getUndefinedStateErrorMessage(key, action) {
 }
 
 
-function getUnexpectedStateShapeWarningMessage(isImmutable, inputState, reducers, action, unexpectedKeyCache) {
-    const reducerKeys  = Object.keys(reducers)
-    const argumentName = action && action.type === ActionTypes.INIT ? 'preloadedState argument passed to createStore' : 'previous state received by the reducer';
+function getUnexpectedStateShapeWarningMessage(inputState: StateType, reducers: {[key: string]: ReducerType}, action: Action, unexpectedKeyCache: {[key: string]: boolean}): string | void {
+    const reducerKeys: Array<string> = Object.keys(reducers);
+    const argumentName: string       = action && action.type === ActionTypes.INIT ? 'preloadedState argument passed to createStore' : 'previous state received by the reducer';
     
     if(reducerKeys.length === 0) {
         return 'Store does not have a valid reducer. Make sure the argument passed to combineReducers is an object whose values are reducers.';
     }
     
-    if(!isImmutable && !isPlainObject(inputState)) {
+    if(!isImmutable(inputState) && !isPlainObject(inputState)) {
         return (
             `The ${argumentName} has unexpected type of "` +
             ({}).toString.call(inputState).match(/\s([a-z|A-Z]+)/)[1] +
@@ -42,9 +51,9 @@ function getUnexpectedStateShapeWarningMessage(isImmutable, inputState, reducers
         );
     }
     
-    const unexpectedKeys = (isImmutable ? inputState.keySeq().toJS() : Object.keys(inputState)).filter(key => !reducers.hasOwnProperty(key) && !unexpectedKeyCache[key]);
+    const unexpectedKeys: Array<string> = (isImmutable(inputState) ? inputState.keySeq().toJS() : Object.keys(inputState)).filter(key => !reducers.hasOwnProperty(key) && !unexpectedKeyCache[key]);
     
-    unexpectedKeys.forEach(key => { unexpectedKeyCache[key] = true; });
+    unexpectedKeys.forEach((key: string): void => { unexpectedKeyCache[key] = true; });
     
     if(unexpectedKeys.length > 0) {
         return (
@@ -57,12 +66,12 @@ function getUnexpectedStateShapeWarningMessage(isImmutable, inputState, reducers
 }
 
 
-function assertReducerShape(reducers) {
-    Object.keys(reducers).forEach(key => {
-        const reducer      = reducers[key]
-        const initialState = reducer(undefined, { type: ActionTypes.INIT })
+function assertReducerShape(reducers: {[key: string]: ReducerType}): void {
+    Object.keys(reducers).forEach((key: string): void => {
+        const reducer: ReducerType = reducers[key];
+        const initialState: any    = reducer(undefined, {type: ActionTypes.INIT});
         
-        if(typeof initialState === 'undefined') {
+        if('undefined' === typeof initialState) {
             throw new Error(
                 `Reducer "${key}" returned undefined during initialization. ` +
                 `If the state passed to the reducer is undefined, you must ` +
@@ -72,8 +81,8 @@ function assertReducerShape(reducers) {
             );
         }
         
-        const type = '@@redux/PROBE_UNKNOWN_ACTION_' + Math.random().toString(36).substring(7).split('').join('.')
-        if(typeof reducer(undefined, { type }) === 'undefined') {
+        const type: string = '@@redux/PROBE_UNKNOWN_ACTION_' + Math.random().toString(36).substring(7).split('').join('.');
+        if('undefined' === typeof reducer(undefined, {type: type})) {
             throw new Error(
                 `Reducer "${key}" returned undefined when probed with a random type. ` +
                 `Don't try to handle ${ActionTypes.INIT} or other actions in "redux/*" ` +
@@ -100,36 +109,37 @@ function assertReducerShape(reducers) {
  * if the state passed to them was undefined, and the current state for any
  * unrecognized action.
  *
+ * @param {Map<string, any> | OrderedMap<string, any> | Record<any> | Object} blankState
+ *
  * @returns {Function} A reducer function that invokes every reducer inside the
  * passed object, and builds a state object with the same shape.
  */
-export default function combineReducers(reducers, blankState: any) {
-    const reducerKeys          = Object.keys(reducers);
-    const finalReducers        = {};
-    const isImmutable: boolean = Immutable.Iterable.isIterable(blankState);
+export function combineReducers(reducers: {[key: string]: ReducerType}, blankState: StateType) {
+    const reducerKeys: Array<string>                  = Object.keys(reducers);
+    const finalReducers: {[key: string]: ReducerType} = {};
     
     for(let i = 0; i < reducerKeys.length; i++) {
-        const key = reducerKeys[i];
+        const key: string = reducerKeys[i];
         
-        if(process.env.NODE_ENV !== 'production') {
-            if(typeof reducers[key] === 'undefined') {
+        if('production' !== process.env.NODE_ENV) {
+            if('undefined' === typeof reducers[key]) {
                 warning(`No reducer provided for key "${key}"`);
             }
         }
         
-        if(typeof reducers[key] === 'function') {
+        if('function' === typeof reducers[key]) {
             finalReducers[key] = reducers[key];
         }
     }
     
-    const finalReducerKeys = Object.keys(finalReducers);
-    let unexpectedKeyCache;
+    const finalReducerKeys: Array<string> = Object.keys(finalReducers);
+    let unexpectedKeyCache: {[key: string]: boolean};
     
-    if(process.env.NODE_ENV !== 'production') {
+    if('production' !== process.env.NODE_ENV) {
         unexpectedKeyCache = {};
     }
     
-    let shapeAssertionError;
+    let shapeAssertionError: Error;
     try {
         assertReducerShape(finalReducers);
     }
@@ -137,35 +147,35 @@ export default function combineReducers(reducers, blankState: any) {
         shapeAssertionError = error;
     }
     
-    return function combination(state = cloneDeep(blankState), action) {
+    return function combination(state: StateType = cloneDeep(blankState), action: Action): StateType {
         if(shapeAssertionError) {
             throw shapeAssertionError;
         }
         
-        if(process.env.NODE_ENV !== 'production') {
-            const warningMessage = getUnexpectedStateShapeWarningMessage(isImmutable, state, finalReducers, action, unexpectedKeyCache);
+        if('production' !== process.env.NODE_ENV) {
+            const warningMessage = getUnexpectedStateShapeWarningMessage(state, finalReducers, action, unexpectedKeyCache);
             
             if(warningMessage) {
                 warning(warningMessage);
             }
         }
         
-        let hasChanged = false;
-        let nextState  = cloneDeep(blankState);
+        let hasChanged: boolean  = false;
+        let nextState: StateType = cloneDeep(blankState);
         
         for(let i = 0; i < finalReducerKeys.length; i++) {
-            const key                 = finalReducerKeys[i];
-            const reducer             = finalReducers[key];
-            const previousStateForKey = isImmutable ? state.get(key) : state[key];
-            const nextStateForKey     = reducer(previousStateForKey, action);
+            const key: string                                  = finalReducerKeys[i];
+            const reducer: (state: any, action: Action) => any = finalReducers[key];
+            const previousStateForKey: any                     = isImmutable(state) ? state.get(key) : state[key];
+            const nextStateForKey: any                         = reducer(previousStateForKey, action);
             
             if(typeof nextStateForKey === 'undefined') {
-                const errorMessage = getUndefinedStateErrorMessage(key, action);
+                const errorMessage: string = getUndefinedStateErrorMessage(key, action);
                 
                 throw new Error(errorMessage);
             }
             
-            isImmutable ? (nextState = nextState.set(key, nextStateForKey)) : (nextState[key] = nextStateForKey);
+            isImmutable(nextState) ? (nextState = (<Map<string, any> | OrderedMap<string, any> | any>nextState).set(key, nextStateForKey)) : (nextState[key] = nextStateForKey);
             
             hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
         }

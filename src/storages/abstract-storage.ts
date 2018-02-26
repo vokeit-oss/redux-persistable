@@ -3,10 +3,13 @@
  */
 
 
-import * as Immutable from 'immutable';
+import {
+    isImmutable,
+    Map,
+    OrderedMap
+} from 'immutable';
 import { SimpleSerializer } from '../serializers/index';
 import {
-    MergerType,
     MigrationType,
     SerializerType,
     StorageType,
@@ -78,9 +81,7 @@ export class AbstractStorage {
             this.storage.getItem(key).then((serialized: string) => {
                 resolve(this.transforms.reduceRight(
                     (previousState: any, transformer: TransformType): any => {
-                        const isImmutable: boolean = Immutable.Iterable.isIterable(previousState);
-                        
-                        if(isImmutable) {
+                        if(isImmutable(previousState)) {
                             previousState.forEach((partialValue: any, partialKey: string) => {
                                 previousState = previousState.set(partialKey, transformer.transformDataFromStorage(previousState.get(partialKey), partialKey));
                             });
@@ -107,9 +108,7 @@ export class AbstractStorage {
         return new Promise<void>((resolve: (...args: any[]) => void, reject: (...args: any[]) => void) => {
             let endState: any = this.transforms.reduce(
                 (previousState: any, transformer: TransformType): any => {
-                    const isImmutable: boolean = Immutable.Iterable.isIterable(previousState);
-                    
-                    if(isImmutable) {
+                    if(isImmutable(previousState)) {
                         previousState.forEach((partialValue: any, partialKey: string) => {
                             previousState = previousState.set(partialKey, transformer.transformDataToStorage(previousState.get(partialKey), partialKey));
                         });
@@ -127,7 +126,10 @@ export class AbstractStorage {
             
             const persistable: {[key: string]: any} = {version: 'number' === typeof version ? version : null};
             
-            Immutable.Iterable.isIterable(endState) ? (endState = endState.set('@@__redux-persistable__', persistable)) : (endState['@@__redux-persistable__'] = persistable);
+            isImmutable(endState) ?
+                (endState = (<Map<string, any> | OrderedMap<string, any> | any>endState).set('@@__redux-persistable__', persistable))
+                :
+                (endState['@@__redux-persistable__'] = persistable);
             
             'undefined' !== typeof endState ? this.storage.setItem(key, this.serializer.serialize(endState)).then(resolve) : this.removeItem(key).then(resolve);
         });

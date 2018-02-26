@@ -4,9 +4,7 @@
 
 
 import { AbstractStorage } from './abstract-storage';
-import { SimpleSerializer } from '../serializers/index';
 import {
-    MergerType,
     MigrationType,
     SerializerType,
     StorageType,

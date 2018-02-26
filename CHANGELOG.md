@@ -1,3 +1,7 @@
+### v2.0.0
+
+- Upgraded immutablejs to 4.0.0-rc.9
+
 ### v1.0.2
 
 - Fixed race condition leading to outdated state passed to reducers

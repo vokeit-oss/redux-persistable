@@ -5,7 +5,6 @@
 
 import * as localforage from 'localforage';
 import { AbstractStorage } from './abstract-storage';
-import { SimpleSerializer } from '../serializers/index';
 import {
     MigrationType,
     SerializerType,

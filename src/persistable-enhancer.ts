@@ -3,7 +3,12 @@
  */
 
 
-import * as Immutable from 'immutable';
+import {
+    isImmutable,
+    Map,
+    OrderedMap,
+    Record
+} from 'immutable';
 const filter = require('lodash.filter');
 const isMatch = require('lodash.ismatch');
 const pickBy = require('lodash.pickby');
@@ -16,12 +21,14 @@ import {
     StoreEnhancerStoreCreator
 } from 'redux';
 import { merger } from './mergers/index';
-import { OptionsType } from './types/index';
+import {
+    OptionsType,
+    StateType
+} from './types/index';
 import * as constants from './constants';
 
 
-export default function persistableEnhancer(options: OptionsType): StoreEnhancer<any> {
-    const isIterable: Function       = Immutable.Iterable.isIterable;
+export function persistableEnhancer(options: OptionsType): StoreEnhancer<any> {
     const configuration: OptionsType = <OptionsType>{
         merger:     merger,
         storageKey: 'redux-persistable',
@@ -36,9 +43,9 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
         throw new Error('Expected enhancer option "storage" to be an object with functions "getItem", "setItem" and "removeItem".');
     }
     
-    const getShapeAction: string                                                                = '@@redux-persistable/GET_SHAPE_' + Math.random().toString(36).substring(7).split('').join('.');
+    const getShapeAction: string = '@@redux-persistable/GET_SHAPE_' + Math.random().toString(36).substring(7).split('').join('.');
     const rehydratedSlices: {[key: string]: {status: 'added' | 'pending' | 'processing' | 'done', value: any}} = {};
-    const actionBuffers: {[key: string]: any[]}                                                 = {};
+    const actionBuffers: {[key: string]: any[]} = {};
     
     return (nextCreateStore: StoreCreator): StoreEnhancerStoreCreator<any> => {
         return (reducer: Reducer<any>, initialState: any, enhancer?: StoreEnhancer<any>): Store<any> => {
@@ -55,25 +62,23 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                             rehydratedSlices[slice].status = 'pending';
                             
                             // Load from storage
-                            configuration.storage.getItem(configuration.storageKey + '@' + slice).then((persistedState: any) => {
-                                const currentState: any    = currentStore.getState();
-                                const isImmutable: boolean = isIterable(currentState);
-                                const loadedState: any     = configuration.merger(
-                                    isImmutable ? currentState.get(slice) : currentState[slice],
-                                    isImmutable ? persistedState.get(slice) : persistedState[slice]
-                                );
+                            configuration.storage.getItem(configuration.storageKey + '@' + slice).then((persistedState: any): void => {
+                                const currentState: any = currentStore.getState();
+                                const loadedState: any  = configuration.merger(getValue(currentState, slice), getValue(persistedState, slice));
+
+                                validateType(currentState, loadedState);
                                 
                                 // Pass the loaded state through the original reducer so custom reducers may handle rehydration themselves
                                 const rehydratedState: any = newReducer(undefined, <Action>{type: constants.REHYDRATE_SLICE_ACTION, slice: slice, payload: loadedState});
-                                const initialSlice: any    = isImmutable ? currentState.get(slice) : currentState[slice];
-                                let rehydratedSlice: any   = isImmutable ? rehydratedState.get(slice) : rehydratedState[slice];
+                                const initialSlice: any    = getValue(currentState, slice);
+                                let rehydratedSlice: any   = getValue(rehydratedState, slice);
                                 
                                 // If initial state matches the rehydrated state returned from the reducer (no custom rehydration applied) use the state loaded from storage 
-                                if(isMatch(isIterable(initialSlice) ? initialSlice.toJS() : initialSlice, isIterable(rehydratedSlice) ? rehydratedSlice.toJS() : rehydratedSlice)) {
+                                if(isMatch(isImmutable(initialSlice) ? initialSlice.toJS() : initialSlice, isImmutable(rehydratedSlice) ? rehydratedSlice.toJS() : rehydratedSlice)) {
                                     rehydratedSlice = loadedState;
                                 }
                                 
-                                rehydratedSlices[slice].value  = isImmutable ? rehydratedSlice.toJS() : rehydratedSlice;
+                                rehydratedSlices[slice].value  = isImmutable(rehydratedSlice) ? rehydratedSlice.toJS() : rehydratedSlice;
                                 rehydratedSlices[slice].status = 'processing';
                                 
                                 // Dispatch an action that the slice has been rehydrated
@@ -105,7 +110,7 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                 }
                 
                 // Create an action buffer for the slice if not done yet
-                if((!(actionSlice in actionBuffers) || !Array.isArray(actionBuffers[actionSlice]))) {
+                if(!(actionSlice in actionBuffers) || !Array.isArray(actionBuffers[actionSlice])) {
                     actionBuffers[actionSlice] = [];
                 }
                 
@@ -143,12 +148,12 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                 // Get the shape of the state to know which rehydrations have to be executed
                 const currentState: any = newReducer(undefined, <Action>{type: getShapeAction});
                 
-                if(isIterable(currentState)) {
+                if(isImmutable(currentState)) {
                     currentState.forEach((value: any, key: string): void => {
                         rehydratedSlices[key] = !(key in rehydratedSlices) ? {status: 'added', value: null} : rehydratedSlices[key];
                     });
                 }
-                else if('object' === typeof currentState && !Array.isArray(currentState)) {
+                else if('object' === typeof currentState && !Array.isArray(currentState) && null !== currentState) {
                     Object.keys(currentState).forEach((key: string): void => {
                         rehydratedSlices[key] = !(key in rehydratedSlices) ? {status: 'added', value: null} : rehydratedSlices[key];
                     });
@@ -160,7 +165,7 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                     state = store.getState();
                     
                     if(constants.REHYDRATED_SLICE_ACTION === action.type && ('slice' in action) && (action['slice'] in rehydratedSlices) && 'processing' === rehydratedSlices[action['slice']].status) {
-                        return originalReducer(isIterable(state) ? state.set(action['slice'], action['payload']) : {...state, [action['slice']]: action['payload']}, action);
+                        return originalReducer(setValue(state, action['slice'], action['payload']), action);
                     }
                     
                     return originalReducer(state, action);
@@ -186,9 +191,9 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
                         if('done' === rehydratedSlices[slice].status) {
                             configuration.storage.setItem(
                                 configuration.storageKey + '@' + slice,
-                                isIterable(state) ? state.filter((value: any, key: string): boolean => key === slice) : pickBy(state, (value: any, key: string): boolean => key === slice),
+                                isImmutable(state) ? state.filter((value: any, key: string): boolean => key === slice) : pickBy(state, (value: any, key: string): boolean => key === slice),
                                 configuration.version
-                            );
+                            ).then();
                         }
                     });
                 }
@@ -204,3 +209,22 @@ export default function persistableEnhancer(options: OptionsType): StoreEnhancer
         };
     };
 };
+
+
+function validateType(...values: Array<StateType>): void {
+    values.forEach((value: any): void => {
+        if(isImmutable(value) && !Map.isMap(value) && !OrderedMap.isOrderedMap(value) && !Record.isRecord(value)) {
+            throw new Error('Invalid state detected, expected an immutable object of type Map, OrderedMap or Record.');
+        }
+    });
+}
+
+
+function getValue(state: any, key: string): StateType {
+    return isImmutable(state) ? state.get(key) : state[key];
+}
+
+
+function setValue(state: StateType, key: string, value: any): StateType {
+    return isImmutable(state) ? (<Map<string, any> | OrderedMap<string, any> | any>state).set(key, value) : {...state, [key]: value};
+}

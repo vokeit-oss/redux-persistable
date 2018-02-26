@@ -8,5 +8,5 @@ export * from './serializers/index';
 export * from './storages/index';
 export * from './types/index';
 export * from './constants';
-export { default as combineReducers } from './combine-reducers';
-export { default as persistableEnhancer } from './persistable-enhancer';
+export * from './combine-reducers';
+export * from './persistable-enhancer';

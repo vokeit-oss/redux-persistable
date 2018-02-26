@@ -3,12 +3,16 @@
  */
 
 
-import * as Immutable from 'immutable';
+import {
+    Map,
+    OrderedMap,
+    Record
+} from 'immutable';
 
 
-export default function immutableMerger(
-                            initialState: Immutable.List<any> | Immutable.Map<any, any> | Immutable.OrderedMap<any, any>,
-                            persistedState: Immutable.List<any> | Immutable.Map<any, any> | Immutable.OrderedMap<any, any>
-                        ): Immutable.List<any> | Immutable.Map<any, any> | Immutable.OrderedMap<any, any> {
-    return persistedState && initialState ? (<any>initialState).mergeDeep(persistedState) : initialState;
+export type StateType = Map<string, any> | OrderedMap<string, any> | Record<any>;
+
+
+export function immutableMerger(initialState: StateType, persistedState: StateType): StateType {
+    return persistedState && initialState ? (<Map<string, any> | OrderedMap<string, any> | any>initialState).mergeDeep(persistedState) : initialState;
 };

@@ -7,7 +7,7 @@
         "immutable"
     ],
     "license":          "MIT",
-    "version":          "1.0.2",
+    "version":          "2.0.0",
     "author":           {
         "name":  "Gabriel Schuster - actra.development",
         "email": "opensource@actra.de",
@@ -27,33 +27,37 @@
         "access":   "public"
     },
     "dependencies":     {
-        "immutable":            "^3.8.2",
-        "localforage":          "^1.5.3",
+        "immutable":            "4.0.0-rc.9",
+        "localforage":          "1.5.7",
         "lodash.clonedeep":     "4.5.0",
         "lodash.filter":        "4.6.0",
         "lodash.ismatch":       "4.4.0",
         "lodash.isplainobject": "4.0.6",
         "lodash.pickby":        "4.6.0",
-        "redux":                "^3.7.2",
-        "remotedev-serialize":  "^0.1.0"
+        "redux":                "3.7.2",
+        "remotedev-serialize":  "0.1.0"
     },
     "devDependencies":  {
-        "@types/lodash.clonedeep":   "^4.5.3",
-        "@types/node":               "^8.0.53",
-        "awesome-typescript-loader": "^3.4.0",
-        "mkdirp":                    "^0.5.1",
-        "ncp":                       "^2.0.0",
-        "npm-run-all":               "^4.1.2",
-        "redux":                     "^3.7.2",
-        "rimraf":                    "^2.6.1",
-        "typescript":                "^2.6.2",
-        "webpack":                   "^3.8.1"
+        "@types/lodash.clonedeep":     "4.5.3",
+        "@types/lodash.filter":        "4.6.3",
+        "@types/lodash.ismatch":       "4.4.3",
+        "@types/lodash.isplainobject": "4.0.3",
+        "@types/lodash.pickby":        "4.6.3",
+        "@types/node":                 "9.4.6",
+        "awesome-typescript-loader":   "3.5.0",
+        "mkdirp":                      "0.5.1",
+        "ncp":                         "2.0.0",
+        "npm-run-all":                 "4.1.2",
+        "redux":                       "3.7.2",
+        "rimraf":                      "2.6.2",
+        "typescript":                  "2.6.2",
+        "webpack":                     "3.11.0"
     },
     "peerDependencies": {
-        "immutable":           "^3.8.2",
-        "localforage":         "^1.5.3",
-        "redux":               "^3.7.2",
-        "remotedev-serialize": "^0.1.0"
+        "immutable":           "4.0.0-rc.9",
+        "localforage":         "1.5.7",
+        "redux":               "3.7.2",
+        "remotedev-serialize": "0.1.0"
     },
     "scripts":          {
         "build":        "npm run-script run-s -- build:clean build:copy build:lib build:esm build:bundle",
