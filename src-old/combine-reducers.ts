@@ -6,19 +6,18 @@
  */
 
 
-import { isImmutable } from 'immutable';
+import {
+    isImmutable,
+    Map,
+    OrderedMap
+} from 'immutable';
 const cloneDeep = require('lodash.clonedeep');
 const isPlainObject = require('lodash.isplainobject');
-import {
-    Action,
-    Reducer
-} from 'redux';
+import{ Action } from 'redux';
 import { ActionTypes } from 'redux/lib/createStore';
 import warning from 'redux/lib/utils/warning';
-
-
 import {
-    ImmutableStateType,
+    ReducerType,
     StateType
 } from './types/index';
 
@@ -35,7 +34,7 @@ function getUndefinedStateErrorMessage(key: string, action: Action): string {
 }
 
 
-function getUnexpectedStateShapeWarningMessage(inputState: StateType, reducers: {[key: string]: Reducer<any>}, action: Action, unexpectedKeyCache: {[key: string]: boolean}): string | void {
+function getUnexpectedStateShapeWarningMessage(inputState: StateType, reducers: {[key: string]: ReducerType}, action: Action, unexpectedKeyCache: {[key: string]: boolean}): string | void {
     const reducerKeys: Array<string> = Object.keys(reducers);
     const argumentName: string       = action && action.type === ActionTypes.INIT ? 'preloadedState argument passed to createStore' : 'previous state received by the reducer';
     
@@ -67,10 +66,10 @@ function getUnexpectedStateShapeWarningMessage(inputState: StateType, reducers: 
 }
 
 
-function assertReducerShape(reducers: {[key: string]: Reducer<any>}): void {
+function assertReducerShape(reducers: {[key: string]: ReducerType}): void {
     Object.keys(reducers).forEach((key: string): void => {
-        const reducer: Reducer<any> = reducers[key];
-        const initialState: any     = reducer(undefined, {type: ActionTypes.INIT});
+        const reducer: ReducerType = reducers[key];
+        const initialState: any    = reducer(undefined, {type: ActionTypes.INIT});
         
         if('undefined' === typeof initialState) {
             throw new Error(
@@ -115,9 +114,9 @@ function assertReducerShape(reducers: {[key: string]: Reducer<any>}): void {
  * @returns {Function} A reducer function that invokes every reducer inside the
  * passed object, and builds a state object with the same shape.
  */
-export default function combineReducers(reducers: {[key: string]: Reducer<any>}, blankState: StateType) {
-    const reducerKeys: Array<string>                   = Object.keys(reducers);
-    const finalReducers: {[key: string]: Reducer<any>} = {};
+export default function combineReducers(reducers: {[key: string]: ReducerType}, blankState: StateType) {
+    const reducerKeys: Array<string>                  = Object.keys(reducers);
+    const finalReducers: {[key: string]: ReducerType} = {};
     
     for(let i = 0; i < reducerKeys.length; i++) {
         const key: string = reducerKeys[i];
@@ -176,7 +175,7 @@ export default function combineReducers(reducers: {[key: string]: Reducer<any>},
                 throw new Error(errorMessage);
             }
             
-            isImmutable(nextState) ? (nextState = (<ImmutableStateType>nextState).set(key, nextStateForKey)) : (nextState[key] = nextStateForKey);
+            isImmutable(nextState) ? (nextState = (<Map<string, any> | OrderedMap<string, any> | any>nextState).set(key, nextStateForKey)) : (nextState[key] = nextStateForKey);
             
             hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
         }

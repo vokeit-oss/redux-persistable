@@ -3,4 +3,7 @@
  */
 
 
-export type MergerType = (initialState: any, persistedState: any) => any;
+import { StateType } from './state.type';
+
+
+export type MergerType = (initialState: StateType, persistedState: StateType) => StateType;

@@ -3,11 +3,7 @@
  */
 
 
-import {
-    Map,
-    OrderedMap,
-    Record
-} from 'immutable';
+import { ImmutableStateType } from './immutable-state.type';
 
 
-export type StateType = Map<string, any> | OrderedMap<string, any> | Record<any> | {[key: string]: any};
+export type StateType = ImmutableStateType | {[key: string]: any};

@@ -11,7 +11,7 @@ export class ImmutableSerializer {
     protected serializer: {stringify: (state: any) => string, parse: (data: string) => any};
     
     
-    constructor(records?: Array<Immutable.Record<any>>) {
+    constructor(records?: any[]) {
         this.setRecords(records);
     }
     
@@ -19,7 +19,7 @@ export class ImmutableSerializer {
     /**
      * Set immutable records by replacing the serializer
      */
-    public setRecords(records?: Array<Immutable.Record<any>>): void {
+    public setRecords(records?: any[]): void {
         this.serializer = serializeImmutable(Immutable, Array.isArray(records) ? records : []);
     }
     

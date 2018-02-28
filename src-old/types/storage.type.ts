@@ -9,7 +9,7 @@ import { TransformType } from './transform.type';
 
 export type StorageType = {
     setSerializer: (serializer: SerializerType) => void,
-    setTransforms: (transforms?: Array<TransformType>) => void,
+    setTransforms: (transforms?: TransformType[]) => void,
     getItem:       (key: string) => Promise<any>,
     setItem:       (key: string, state: any, version?: number) => Promise<void>,
     removeItem:    (key: string) => Promise<void>

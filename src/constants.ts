@@ -3,6 +3,5 @@
  */
 
 
-export const LOADED_ACTION: string           = '@@redux-persistable/LOADED';
-export const REHYDRATE_SLICE_ACTION: string  = '@@redux-persistable/REHYDRATE_SLICE';
-export const REHYDRATED_SLICE_ACTION: string = '@@redux-persistable/REHYDRATED_SLICE';
+export const REHYDRATE_ACTION: string  = '@@actra-development-oss/redux-persistable/rehydrate';
+export const REHYDRATED_ACTION: string = '@@actra-development-oss/redux-persistable/rehydrated';

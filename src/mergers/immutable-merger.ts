@@ -3,16 +3,9 @@
  */
 
 
-import {
-    Map,
-    OrderedMap,
-    Record
-} from 'immutable';
+import { ImmutableStateType } from '../types/index';
 
 
-export type StateType = Map<string, any> | OrderedMap<string, any> | Record<any>;
-
-
-export function immutableMerger(initialState: StateType, persistedState: StateType): StateType {
-    return persistedState && initialState ? (<Map<string, any> | OrderedMap<string, any> | any>initialState).mergeDeep(persistedState) : initialState;
+export function immutableMerger(initialState: ImmutableStateType, persistedState: ImmutableStateType): ImmutableStateType {
+    return persistedState && initialState ? initialState.mergeDeep(persistedState) : initialState;
 };

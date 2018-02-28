@@ -7,7 +7,7 @@ export class SimpleSerializer {
     /**
      * Set immutable records / ignored for SimpleSerializer
      */
-    public setRecords(records: Array<any>): void {
+    public setRecords(records: any[]): void {
     }
     
     

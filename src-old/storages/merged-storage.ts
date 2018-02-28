@@ -123,14 +123,14 @@ export class MergedStorage {
     /**
      * Set transforms / ignored for MergedStorage
      */
-    public setTransforms(transforms?: Array<TransformType>): void {
+    public setTransforms(transforms?: TransformType[]): void {
     }
     
     
     /**
      * Set migrations / ignored for MergedStorage
      */
-    public setMigrations(migrations?: Array<MigrationType>): void {
+    public setMigrations(migrations?: MigrationType[]): void {
     }
     
     
@@ -138,14 +138,14 @@ export class MergedStorage {
      * Get an item from combined storages
      */
     public getItem(key: string): Promise<any> {
-        return new Promise<any>((resolve: (...args: Array<any>) => void, reject: (...args: Array<any>) => void) => {
-            const promises: Array<Promise<any>> = [];
+        return new Promise<any>((resolve: (...args: any[]) => void, reject: (...args: any[]) => void) => {
+            const promises: Promise<any>[] = [];
             
-            Object.keys(this.storages).forEach((id: string): void => {
+            Object.keys(this.storages).forEach((id: string) => {
                 promises.push(this.storages[id].getItem(key));
             });
             
-            Promise.all(promises).then((partialStates: Array<any>): void => {
+            Promise.all(promises).then((partialStates: any[]): void => {
                 let state: any = cloneDeep(this.blankState);
                 
                 partialStates.forEach((partialState: any): void => {
@@ -164,10 +164,10 @@ export class MergedStorage {
      * Set an item on combined storages
      */
     public setItem(key: string, state: any, version?: number): Promise<void> {
-        return new Promise<any>((resolve: (...args: Array<any>) => void, reject: (...args: Array<any>) => void) => {
-            const promises: Array<Promise<void>> = [];
+        return new Promise<any>((resolve: (...args: any[]) => void, reject: (...args: any[]) => void) => {
+            const promises: Promise<void>[] = [];
             
-            Object.keys(this.storages).forEach((id: string): void => {
+            Object.keys(this.storages).forEach((id: string) => {
                 promises.push(this.storages[id].setItem(key, state, version));
             });
             
@@ -180,10 +180,10 @@ export class MergedStorage {
      * Remove an item from combined storages
      */
     public removeItem(key: string): Promise<void> {
-        return new Promise<any>((resolve: (...args: Array<any>) => void, reject: (...args: Array<any>) => void) => {
-            const promises: Array<Promise<void>> = [];
+        return new Promise<any>((resolve: (...args: any[]) => void, reject: (...args: any[]) => void) => {
+            const promises: Promise<void>[] = [];
             
-            Object.keys(this.storages).forEach((id: string): void => {
+            Object.keys(this.storages).forEach((id: string) => {
                 promises.push(this.storages[id].removeItem(key));
             });
             

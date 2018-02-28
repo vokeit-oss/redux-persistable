@@ -10,21 +10,21 @@ import {
 } from 'immutable';
 import { SimpleSerializer } from '../serializers/index';
 import {
-    BaseStorageType,
     MigrationType,
     SerializerType,
+    StorageType,
     TransformType
 } from '../types/index';
 
 
 export class AbstractStorage {
-    protected storage: BaseStorageType;
+    protected storage: StorageType;
     protected serializer: SerializerType;
-    protected transforms: Array<TransformType>      = [];
+    protected transforms: TransformType[]           = [];
     protected migrations: {[key: number]: Function} = {};
     
     
-    constructor(storage: BaseStorageType, serializer?: SerializerType, transforms?: Array<TransformType>, migrations?: Array<MigrationType>) {
+    constructor(storage: StorageType, serializer?: SerializerType, transforms?: TransformType[], migrations?: MigrationType[]) {
         this.storage = storage;
         
         this.setSerializer('undefined' !== typeof serializer ? serializer : new SimpleSerializer());
@@ -44,11 +44,10 @@ export class AbstractStorage {
     /**
      * Set transforms
      */
-    public setTransforms(transforms?: Array<TransformType>): void {
+    public setTransforms(transforms?: TransformType[]): void {
         this.transforms = Array.isArray(transforms) ?
             transforms.filter((transform: any): boolean => {
-                return 'object' === typeof transform && 'transformDataToStorage' in transform && 'function' === typeof transform.transformDataToStorage &&
-                    'transformDataFromStorage' in transform && 'function' === typeof transform.transformDataFromStorage;
+                return 'object' === typeof transform && 'function' === typeof transform.transformDataToStorage && 'function' === typeof transform.transformDataFromStorage;
             })
             :
             [];
@@ -61,7 +60,7 @@ export class AbstractStorage {
     public setMigrations(migrations?: MigrationType[]): void {
         migrations = Array.isArray(migrations) ?
             migrations.filter((migration: any): boolean => {
-                return 'object' === typeof migration && 'version' in migration && 'number' === typeof migration.version && 'migration' in migration && 'function' === typeof migration.migration;
+                return 'object' === typeof migration && 'number' === typeof migration.version && 'function' === typeof migration.migration;
             })
             :
             [];
@@ -78,8 +77,8 @@ export class AbstractStorage {
      * Get an item from storage
      */
     public getItem(key: string): Promise<any> {
-        return new Promise<any>((resolve: (...args: Array<any>) => void, reject: (...args: Array<any>) => void) => {
-            this.storage.getItem(key).then((serialized: string): void => {
+        return new Promise<any>((resolve: (...args: any[]) => void, reject: (...args: any[]) => void) => {
+            this.storage.getItem(key).then((serialized: string) => {
                 resolve(this.transforms.reduceRight(
                     (previousState: any, transformer: TransformType): any => {
                         if(isImmutable(previousState)) {
@@ -88,7 +87,7 @@ export class AbstractStorage {
                             });
                         }
                         else if('object' === typeof previousState && !Array.isArray(previousState) && null !== previousState) {
-                            previousState.forEach((partialValue: any, partialKey: string): void => {
+                            previousState.forEach((partialValue: any, partialKey: string) => {
                                 previousState[partialKey] = transformer.transformDataFromStorage(previousState[partialKey], partialKey);
                             });
                         }
@@ -159,7 +158,7 @@ export class AbstractStorage {
         let currentVersion: number;
         
         if('object' === deserialized && '@@__redux-persistable__' in deserialized) {
-            const persistable: {[key: string]: any, version?: number} = deserialized['@@__redux-persistable__'];
+            const persistable: {[key: string]: any} = deserialized['@@__redux-persistable__'];
             
             if('version' in persistable) {
                 currentVersion = Number(persistable.version);

@@ -13,9 +13,9 @@ import {
 
 
 export class LocalforageStorage extends AbstractStorage {
-    constructor(options?: {[key: string]: any}, serializer?: SerializerType, transforms?: Array<TransformType>, migrations?: Array<MigrationType>) {
+    constructor(options?: {[key: string]: any}, serializer?: SerializerType, transforms?: TransformType[], migrations?: MigrationType[]) {
         super(
-            localforage.createInstance({
+            <any>localforage.createInstance({
                 description: '',
                 name:        'redux-persistable-application',
                 storeName:   'redux-persistable-store',

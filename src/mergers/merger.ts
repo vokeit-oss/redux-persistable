@@ -3,6 +3,9 @@
  */
 
 
-export default function merger(initialState: any, persistedState: any): any {
+import { StateType } from '../types/index';
+
+
+export default function merger(initialState: StateType, persistedState: StateType): StateType {
     return persistedState ? {...initialState, ...persistedState} : initialState;
 };

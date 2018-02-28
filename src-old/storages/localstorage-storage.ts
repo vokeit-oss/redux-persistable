@@ -11,8 +11,8 @@ import {
 } from '../types/index';
 
 
-export class SessionstorageStorage extends AbstractBrowserStorage {
+export class LocalstorageStorage extends AbstractBrowserStorage {
     constructor(serializer?: SerializerType, transforms?: TransformType[], migrations?: MigrationType[]) {
-        super('session', serializer, transforms, migrations);
+        super('local', serializer, transforms, migrations);
     }
 }
