@@ -9,6 +9,8 @@ import {
     OrderedMap,
     Record
 } from 'immutable';
+const isMatch = require('lodash.ismatch');
+const pickBy = require('lodash.pickby');
 import {
     Action,
     Reducer,
@@ -30,7 +32,6 @@ import {
 
 
 // Internal actions that should not be catched by reducers
-const setStateAction: string = '@@actra-development-oss/redux-persistable/SET_STATE_' + Math.random().toString(36).substring(7).split('').join('.');
 const getShapeAction: string = '@@actra-development-oss/redux-persistable/GET_SHAPE_' + Math.random().toString(36).substring(7).split('').join('.');
 
 
@@ -46,13 +47,28 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
     let actionBuffers: {[key: number]: ActionBufferType}                                     = {};
     let bufferIndex: number                                                                  = -1;
     const slices: {[key: string]: 'added' | 'pending' | 'processing' | 'processed' | 'done'} = {};
-    
-    
+
+
+    /**
+     * Get a value independent of state type (immutable / plain JavaScript object)
+     *
+     * @param {StateType} state
+     * @param {string} key
+     * @returns {any}
+     */
     function getValue(state: StateType, key: string): any {
         return isImmutable(state) ? state.get(key) : state[key];
     }
     
-    
+
+    /**
+     * Set a value independent of state type (immutable / plain JavaScript object)
+     *
+     * @param {StateType} state
+     * @param {string} key
+     * @param value
+     * @returns {StateType}
+     */
     function setValue(state: StateType, key: string, value: any): StateType {
         if(isImmutable(state)) {
             if(!Map.isMap(state) && !OrderedMap.isOrderedMap(state) && !Record.isRecord(state)) {
@@ -68,11 +84,20 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
             throw new Error('redux-persistable can only handle immutable states of type Map, OrderedMap or Record and plain JavaScript objects.');
         }
     }
-    
-    
+
+
+    /**
+     * Create the store and override several methods
+     *
+     * @param {StoreCreator} nextCreateStore
+     * @param {Reducer<StateType>} reducer
+     * @param {StateType} initialState
+     * @param {StoreEnhancer<StateType>} enhancer
+     */
     function createStore(nextCreateStore: StoreCreator, reducer: Reducer<StateType>, initialState: StateType, enhancer?: StoreEnhancer<StateType>): void {
         store = nextCreateStore(reducer, initialState, enhancer);
-        
+
+        // Override dispatch method to catch several actions
         const originalDispatch: (action: Action) => any = store.dispatch;
         const newDispatch: (action: Action) => any      = (action: Action): any => {
             if(constants.REHYDRATE_ACTION === action.type) {
@@ -93,35 +118,8 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
                     actionBuffers[currentBuffer].data = getValue(data, slice);
 
                     originalDispatch(<Action & {slice: string, buffer: number}>{type: constants.REHYDRATE_ACTION, slice: slice, buffer: currentBuffer});
-
-                    // const previousState: any = getValue(store.getState(), slice);
-                    //
-                    // originalDispatch(<Action & {payload: any, slice: string}>{type: constants.REHYDRATE_ACTION, payload: getValue(data, slice), slice: slice});
-                    //
-                    // const nextState: any                    = getValue(store.getState(), slice);
-                    // const wasHandled: boolean               = previousState !== nextState;
-                    // actionBuffers[currentBuffer].wasHandled = !wasHandled ? getValue(data, slice) : nextState;
-                    // actionBuffers[currentBuffer].data       = !wasHandled ? getValue(data, slice) : nextState;
-                    //
-                    // newDispatch(<Action & {buffer: number}>{type: setStateAction, buffer: currentBuffer});
                 });
             }
-            // else if(setStateAction === action.type) {
-            //     if(!('buffer' in action) || !(actionBuffers[(<Action & {buffer: number}>action).buffer])) {
-            //         return;
-            //     }
-            //
-            //     const slice: string = actionBuffers[(<Action & {buffer: number}>action).buffer].slice;
-            //     if('processing' !== slices[slice]) {
-            //         return;
-            //     }
-            //
-            //     originalDispatch(action);
-            //
-            //     slices[slice] = 'processed';
-            //
-            //     newDispatch(<Action & {buffer: number}>{type: constants.REHYDRATED_ACTION, buffer: (<Action & {buffer: number}>action).buffer});
-            // }
             else if(constants.REHYDRATED_ACTION === action.type) {
                 if(!('buffer' in action) || !(actionBuffers[(<Action & {buffer: number}>action).buffer])) {
                     return;
@@ -144,7 +142,8 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
                 originalDispatch(action);
             }
         };
-        
+
+        // Override replaceReducer to catch newly added reducers
         const originalReplaceReducer: (reducer: Reducer<StateType>) => void = store.replaceReducer;
         const newReplaceReducer: (reducer: Reducer<StateType>) => void      = (reducer: Reducer<StateType>): void => {
             const originalReducer: Reducer<StateType> = reducer;
@@ -166,23 +165,9 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
 
                     setTimeout((): void => newDispatch(<Action & {buffer: number}>{type: constants.REHYDRATED_ACTION, buffer: (<Action & {buffer: number}>action).buffer}), 0);
 
-                    return previousSliceState === nextSliceState ? setValue(state, buffer.slice, buffer.data) : nextState;
+                    return isMatch(isImmutable(previousSliceState) ? previousSliceState.toJS() : previousSliceState, isImmutable(nextSliceState) ? nextSliceState.toJS() : nextSliceState) ?
+                        setValue(state, buffer.slice, buffer.data) : nextState;
                 }
-
-
-
-                // if(setStateAction === action.type) {
-                //     if(!('buffer' in action) || !(actionBuffers[(<Action & {buffer: number}>action).buffer])) {
-                //         return state;
-                //     }
-                //
-                //     const buffer: ActionBufferType = actionBuffers[(<Action & {buffer: number}>action).buffer];
-                //     if('processing' !== slices[buffer.slice]) {
-                //         return state;
-                //     }
-                //
-                //     return setValue(state, buffer.slice, buffer.data);
-                // }
                 
                 return originalReducer(state, action);
             };
@@ -200,8 +185,14 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
         store.dispatch       = newDispatch;
         store.replaceReducer = newReplaceReducer;
     }
-    
-    
+
+
+    /**
+     * Flush the given action buffer
+     * Waits for prior buffers to complete and flushes subsequent buffers that are already completed
+     *
+     * @param {number} currentBuffer
+     */
     function flushBuffer(currentBuffer: number): void {
         if(currentBuffer in actionBuffers) {
             actionBuffers[currentBuffer].ready = true;
@@ -222,8 +213,13 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
             }
         }
     }
-    
-    
+
+
+    /**
+     * Analyze the reducer tree to identify slices
+     *
+     * @param {Reducer<any>} reducer
+     */
     function analyzeReducerTree(reducer: Reducer<any>): void {
         const state: StateType = reducer(undefined, <Action>{type: getShapeAction});
         
@@ -248,8 +244,11 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
             throw new Error('redux-persistable can only handle immutable states of type Map, OrderedMap or Record and plain JavaScript objects.');
         }
     }
-    
-    
+
+
+    /**
+     * Dispatch rehydrate actions for all slices that were added
+     */
     function rehydrate(): void {
         const currentSlices: {[key: string]: 'added' | 'pending' | 'processing' | 'processed' | 'done'} = {...slices};
         
@@ -278,6 +277,26 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
             
             // Initial rehydration
             rehydrate();
+
+            // Subscribe to store to persist state changes for all slices that have been rehydrated
+            store.subscribe(() => {
+                const state: any = store.getState();
+
+                try {
+                    Object.keys(slices).forEach((slice: string): void => {
+                        if('done' === slices[slice]) {
+                            configuration.storage.setItem(
+                                configuration.storageKey + '@' + slice,
+                                isImmutable(state) ? (<ImmutableStateType | any>state).filter((value: any, key: string): boolean => key === slice) : pickBy(state, (value: any, key: string): boolean => key === slice),
+                                configuration.version
+                            ).then();
+                        }
+                    });
+                }
+                catch(error) {
+                    console.warn('Failed to persist state to storage:', error);
+                }
+            });
             
             return store;
         };

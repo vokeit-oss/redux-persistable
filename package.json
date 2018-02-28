@@ -7,7 +7,7 @@
         "immutable"
     ],
     "license":          "MIT",
-    "version":          "2.0.1",
+    "version":          "2.0.2",
     "author":           {
         "name":  "Gabriel Schuster - actra.development",
         "email": "opensource@actra.de",
@@ -30,7 +30,6 @@
         "immutable":            "4.0.0-rc.9",
         "localforage":          "1.5.7",
         "lodash.clonedeep":     "4.5.0",
-        "lodash.filter":        "4.6.0",
         "lodash.ismatch":       "4.4.0",
         "lodash.isplainobject": "4.0.6",
         "lodash.pickby":        "4.6.0",
@@ -39,7 +38,6 @@
     },
     "devDependencies":  {
         "@types/lodash.clonedeep":     "4.5.3",
-        "@types/lodash.filter":        "4.6.3",
         "@types/lodash.ismatch":       "4.4.3",
         "@types/lodash.isplainobject": "4.0.3",
         "@types/lodash.pickby":        "4.6.3",

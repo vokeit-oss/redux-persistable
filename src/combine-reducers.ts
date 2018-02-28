@@ -176,7 +176,7 @@ export default function combineReducers(reducers: {[key: string]: Reducer<any>},
                 throw new Error(errorMessage);
             }
             
-            isImmutable(nextState) ? (nextState = (<ImmutableStateType>nextState).set(key, nextStateForKey)) : (nextState[key] = nextStateForKey);
+            isImmutable(nextState) ? (nextState = (<ImmutableStateType | any>nextState).set(key, nextStateForKey)) : (nextState[key] = nextStateForKey);
             
             hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
         }

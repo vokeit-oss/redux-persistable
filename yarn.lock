@@ -8,12 +8,6 @@
   dependencies:
     "@types/lodash" "*"
 
-"@types/lodash.filter@4.6.3":
-  version "4.6.3"
-  resolved "https://registry.yarnpkg.com/@types/lodash.filter/-/lodash.filter-4.6.3.tgz#9a5a92d89927b5aaf09ae08655c23c31604f1f88"
-  dependencies:
-    "@types/lodash" "*"
-
 "@types/lodash.ismatch@4.4.3":
   version "4.4.3"
   resolved "https://registry.yarnpkg.com/@types/lodash.ismatch/-/lodash.ismatch-4.4.3.tgz#47329ab01d327ad1338ad379d3bed5453b23adb9"
@@ -1554,10 +1548,6 @@ lodash.clonedeep@4.5.0:
   version "4.5.0"
   resolved "https://registry.npmjs.org/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz#e23f3f9c4f8fbdde872529c1071857a086e5ccef"
 
-lodash.filter@4.6.0:
-  version "4.6.0"
-  resolved "https://registry.npmjs.org/lodash.filter/-/lodash.filter-4.6.0.tgz#668b1d4981603ae1cc5a6fa760143e480b4c4ace"
-
 lodash.ismatch@4.4.0:
   version "4.4.0"
   resolved "https://registry.npmjs.org/lodash.ismatch/-/lodash.ismatch-4.4.0.tgz#756cb5150ca3ba6f11085a78849645f188f85f37"
@@ -1565,10 +1555,6 @@ lodash.ismatch@4.4.0:
 lodash.isplainobject@4.0.6:
   version "4.0.6"
   resolved "https://registry.npmjs.org/lodash.isplainobject/-/lodash.isplainobject-4.0.6.tgz#7c526a52d89b45c45cc690b88163be0497f550cb"
-
-lodash.keys@4.2.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/lodash.keys/-/lodash.keys-4.2.0.tgz#a08602ac12e4fb83f91fc1fb7a360a4d9ba35205"
 
 lodash.pickby@4.6.0:
   version "4.6.0"

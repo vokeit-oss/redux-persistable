@@ -1,3 +1,7 @@
+### v2.0.2
+
+- Major rewrite and cleanup
+
 ### v2.0.0
 
 - Upgraded immutablejs to 4.0.0-rc.9
