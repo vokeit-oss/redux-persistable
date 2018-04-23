@@ -165,7 +165,8 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
 
                     setTimeout((): void => newDispatch(<Action & {buffer: number}>{type: constants.REHYDRATED_ACTION, buffer: (<Action & {buffer: number}>action).buffer}), 0);
 
-                    return isMatch(isImmutable(previousSliceState) ? previousSliceState.toJS() : previousSliceState, isImmutable(nextSliceState) ? nextSliceState.toJS() : nextSliceState) ?
+                    return 'undefined' !== typeof buffer.data &&
+                           isMatch(isImmutable(previousSliceState) ? previousSliceState.toJS() : previousSliceState, isImmutable(nextSliceState) ? nextSliceState.toJS() : nextSliceState) ?
                         setValue(state, buffer.slice, buffer.data) : nextState;
                 }
                 
