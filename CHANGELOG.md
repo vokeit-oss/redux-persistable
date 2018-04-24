@@ -2,6 +2,8 @@
 
 - Fixed typing on ImmutableMerger to accept StateType being either an ImmutableStateType or a key-indexed object
 - Fixed root reducer created in createStore() to check for a value received from storage or return the next state reduced from the originally specified reducer
+- Wrapped LocalForage to fullfil the storage interface
+- Updated dependencies
 
 ### v2.0.2
 

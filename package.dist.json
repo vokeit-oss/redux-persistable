@@ -24,18 +24,18 @@
     },
     "dependencies":     {
         "immutable":            "4.0.0-rc.9",
-        "localforage":          "1.5.7",
+        "localforage":          "1.7.1",
         "lodash.clonedeep":     "4.5.0",
         "lodash.ismatch":       "4.4.0",
         "lodash.isplainobject": "4.0.6",
         "lodash.pickby":        "4.6.0",
         "redux":                "3.7.2",
-        "remotedev-serialize":  "0.1.0"
+        "remotedev-serialize":  "0.1.1"
     },
     "peerDependencies": {
         "immutable":           "4.0.0-rc.9",
-        "localforage":         "1.5.7",
+        "localforage":         "1.7.1",
         "redux":               "3.7.2",
-        "remotedev-serialize": "0.1.0"
+        "remotedev-serialize": "0.1.1"
     }
 }
