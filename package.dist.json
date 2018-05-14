@@ -7,7 +7,7 @@
         "immutable"
     ],
     "license":          "MIT",
-    "version":          "2.0.5",
+    "version":          "3.0.0",
     "author":           {
         "name":  "Gabriel Schuster - actra.development",
         "email": "opensource@actra.de",
@@ -29,13 +29,13 @@
         "lodash.ismatch":       "4.4.0",
         "lodash.isplainobject": "4.0.6",
         "lodash.pickby":        "4.6.0",
-        "redux":                "3.7.2",
+        "redux":                "4.0.0",
         "remotedev-serialize":  "0.1.1"
     },
     "peerDependencies": {
         "immutable":           "4.0.0-rc.9",
         "localforage":         "1.7.1",
-        "redux":               "3.7.2",
+        "redux":               "4.0.0",
         "remotedev-serialize": "0.1.1"
     }
 }

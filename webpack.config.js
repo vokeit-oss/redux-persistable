@@ -3,8 +3,9 @@
  */
 
 
-const path    = require('path');
-const webpack = require('webpack');
+const path           = require('path');
+const webpack        = require('webpack');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 
 
 const config = {
@@ -13,6 +14,7 @@ const config = {
         'redux-persistable':     [path.resolve(__dirname, 'src/index.ts')],
         'redux-persistable.min': [path.resolve(__dirname, 'src/index.ts')]
     },
+    mode: 'production',
     module: {
         rules: [
             {
@@ -33,6 +35,14 @@ const config = {
             }
         ]
     },
+    optimization: {
+        minimizer: [
+            new UglifyJsPlugin({
+                sourceMap: true,
+                include:   /\.min\.js$/,
+            })
+        ]
+    },
     output: {
         path:           path.resolve(__dirname, 'dist/_bundles'),
         filename:       '[name].js',
@@ -40,17 +50,13 @@ const config = {
         library:        'redux-persistable',
         umdNamedDefine: true
     },
-    plugins: [
-        new webpack.optimize.UglifyJsPlugin({
-            minimize:  true,
-            sourceMap: true,
-            include:   /\.min\.js$/,
-        })
-    ],
+    performance: {
+        hints: false
+    },
     resolve: {
         extensions: ['.ts', '.js']
     }
-}
+};
 
 
 module.exports = config;

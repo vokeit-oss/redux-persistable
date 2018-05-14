@@ -5,3 +5,4 @@
 /dist
 /.idea
 redux-persistable.iml
+yarn.lock
