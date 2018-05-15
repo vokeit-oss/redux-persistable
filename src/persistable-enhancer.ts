@@ -90,11 +90,11 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
      * Create the store and override several methods
      *
      * @param {StoreCreator} nextCreateStore
-     * @param {Reducer<StateType>} reducer
+     * @param {Reducer<StateType, Action>} reducer
      * @param {StateType} initialState
      * @param {StoreEnhancer<StateType>} enhancer
      */
-    function createStore(nextCreateStore: StoreCreator, reducer: Reducer<StateType>, initialState: StateType, enhancer?: StoreEnhancer<StateType>): void {
+    function createStore(nextCreateStore: StoreCreator, reducer: Reducer<StateType, Action>, initialState: StateType, enhancer?: StoreEnhancer<StateType>): void {
         store = nextCreateStore(reducer, initialState, enhancer);
 
         // Override dispatch method to catch several actions
@@ -144,10 +144,10 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
         };
 
         // Override replaceReducer to catch newly added reducers
-        const originalReplaceReducer: (reducer: Reducer<StateType>) => void = store.replaceReducer;
-        const newReplaceReducer: (reducer: Reducer<StateType>) => void      = (reducer: Reducer<StateType>): void => {
-            const originalReducer: Reducer<StateType> = reducer;
-            const newReducer: Reducer<StateType>      = (state: StateType, action: Action): StateType => {
+        const originalReplaceReducer: (reducer: Reducer<StateType, Action>) => void = store.replaceReducer;
+        const newReplaceReducer: (reducer: Reducer<StateType, Action>) => void      = (reducer: Reducer<StateType, Action>): void => {
+            const originalReducer: Reducer<StateType, Action> = reducer;
+            const newReducer: Reducer<StateType, Action>      = (state: StateType, action: Action): StateType => {
                 if(constants.REHYDRATE_ACTION === action.type) {
                     if(!('buffer' in action) || !(actionBuffers[(<Action & {buffer: number}>action).buffer])) {
                         return state;
@@ -219,9 +219,9 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
     /**
      * Analyze the reducer tree to identify slices
      *
-     * @param {Reducer<any>} reducer
+     * @param {Reducer<any, Action>} reducer
      */
-    function analyzeReducerTree(reducer: Reducer<any>): void {
+    function analyzeReducerTree(reducer: Reducer<any, Action>): void {
         const state: StateType = reducer(undefined, <Action>{type: getShapeAction});
         
         if(isImmutable(state)) {
@@ -264,7 +264,7 @@ export default function persistableEnhancer(options: OptionsType): (nextCreateSt
     
     
     return (nextCreateStore: StoreCreator): StoreEnhancerStoreCreator<any> => {
-        return (reducer: Reducer<any>, initialState: any, enhancer?: StoreEnhancer<any>): Store<any> => {
+        return (reducer: Reducer<any, any>, initialState: any, enhancer?: StoreEnhancer<any>): Store<any> => {
             if('function' === typeof initialState && 'undefined' === typeof enhancer) {
                 enhancer     = initialState;
                 initialState = undefined;

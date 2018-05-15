@@ -6,4 +6,4 @@
 import { ImmutableStateType } from './immutable-state.type';
 
 
-export type StateType = ImmutableStateType | {[key: string]: any};
+export type StateType = ImmutableStateType | {[key: string]: any} | any;
